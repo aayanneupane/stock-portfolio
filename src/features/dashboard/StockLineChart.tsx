@@ -1,6 +1,11 @@
 import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
+import type { ComponentType } from 'react';
+import HighchartsReactModule from 'highcharts-react-official';
 import { PriceDataPoint } from '../../types/stock';
+
+const HighchartsReact =
+  ((HighchartsReactModule as { default?: ComponentType<any> }).default ??
+    HighchartsReactModule) as ComponentType<any>;
 
 interface StockLineChartProps {
   ticker: string;
@@ -25,15 +30,15 @@ export function StockLineChart({ ticker, data }: StockLineChartProps) {
     },
     yAxis: {
       title: {
-        text: 'Price (USD)'
+        text: 'Price (NPR)'
       },
       labels: {
-        format: '${value}'
+        format: 'Rs. {value}'
       }
     },
     tooltip: {
       xDateFormat: '%Y-%m-%d',
-      pointFormat: 'Price: <b>${point.y:.2f}</b>'
+      pointFormat: 'Price: <b>Rs. {point.y:.2f}</b>'
     },
     series: [
       {

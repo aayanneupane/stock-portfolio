@@ -19,10 +19,12 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
+  { label: 'Portfolio', path: '/portfolio', icon: <AccountBalanceWalletIcon /> },
 ];
 
 export function AppLayout() {

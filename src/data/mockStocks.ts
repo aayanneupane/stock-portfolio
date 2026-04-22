@@ -30,28 +30,58 @@ function generateMockHistory(basePrice: number, days: number): StockHistory['his
 
 export const mockStocks: StockHistory[] = [
   {
-    ticker: 'AAPL',
-    name: 'Apple Inc.',
-    history: generateMockHistory(170, 90),
+    ticker: 'ACLBSL',
+    name: 'NEPSE ACLBSL',
+    history: generateMockHistory(979, 90),
   },
   {
-    ticker: 'MSFT',
-    name: 'Microsoft Corp.',
-    history: generateMockHistory(400, 90),
+    ticker: 'ADBL',
+    name: 'Agricultural Development Bank',
+    history: generateMockHistory(312.2, 90),
   },
   {
-    ticker: 'GOOGL',
-    name: 'Alphabet Inc.',
-    history: generateMockHistory(145, 90),
+    ticker: 'AHL',
+    name: 'NEPSE AHL',
+    history: generateMockHistory(555.8, 90),
   },
   {
-    ticker: 'TSLA',
-    name: 'Tesla Inc.',
-    history: generateMockHistory(200, 90),
+    ticker: 'AHPC',
+    name: 'NEPSE AHPC',
+    history: generateMockHistory(280, 90),
   },
   {
-    ticker: 'AMZN',
-    name: 'Amazon.com Inc.',
-    history: generateMockHistory(180, 90),
-  }
+    ticker: 'AKJCL',
+    name: 'NEPSE AKJCL',
+    history: generateMockHistory(375, 90),
+  },
+  {
+    ticker: 'AKPL',
+    name: 'Arun Kabeli Power',
+    history: generateMockHistory(258.5, 90),
+  },
+  {
+    ticker: 'ALBSL',
+    name: 'NEPSE ALBSL',
+    history: generateMockHistory(1202.1, 90),
+  },
+  {
+    ticker: 'ALICL',
+    name: 'Asian Life Insurance',
+    history: generateMockHistory(454, 90),
+  },
+  {
+    ticker: 'ANLB',
+    name: 'NEPSE ANLB',
+    history: generateMockHistory(6056, 90),
+  },
+  {
+    ticker: 'API',
+    name: 'API Power Company',
+    history: generateMockHistory(340, 90),
+  },
+  {
+    ticker: 'AVYAN',
+    name: 'NEPSE AVYAN',
+    history: generateMockHistory(1106, 90),
+  },
 ];

@@ -1,6 +1,11 @@
 import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
+import type { ComponentType } from 'react';
+import HighchartsReactModule from 'highcharts-react-official';
 import { PriceDataPoint } from '../../types/stock';
+
+const HighchartsReact =
+  ((HighchartsReactModule as { default?: ComponentType<any> }).default ??
+    HighchartsReactModule) as ComponentType<any>;
 
 interface StockColumnChartProps {
   ticker: string;
