@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   createColumnHelper,
   flexRender,
@@ -22,10 +22,14 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import type { PortfolioEntry } from '../../types/stock';
 import { getCurrentPrice } from '../../utils/stockHelpers';
 
@@ -37,13 +41,29 @@ interface PortfolioTableProps {
   entries: PortfolioEntry[];
   onEdit: (entry: PortfolioEntry) => void;
   onDelete: (entry: PortfolioEntry) => void;
+  selectedTicker?: string;
+  onSelectTicker?: (ticker: string) => void;
 }
 
 const columnHelper = createColumnHelper<PortfolioRow>();
 
-export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProps) {
+export function PortfolioTable({
+  entries,
+  onEdit,
+  onDelete,
+  selectedTicker,
+  onSelectTicker,
+}: PortfolioTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setGlobalFilter(searchInput), 250);
+    return () => window.clearTimeout(id);
+  }, [searchInput]);
 
   const data = useMemo<PortfolioRow[]>(
     () =>
@@ -77,6 +97,14 @@ export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProp
       }),
       columnHelper.accessor('currentPrice', {
         header: 'Current Price',
+        sortingFn: (a, b, id) => {
+          const av = a.getValue<number | null>(id);
+          const bv = b.getValue<number | null>(id);
+          if (av === null && bv === null) return 0;
+          if (av === null) return 1;
+          if (bv === null) return -1;
+          return av - bv;
+        },
         cell: (info) => {
           const price = info.getValue();
           return price === null ? 'N/A' : `Rs. ${price.toFixed(2)}`;
@@ -92,12 +120,22 @@ export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProp
         cell: (info) => (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Tooltip title="Edit">
-              <IconButton size="small" color="primary" onClick={() => onEdit(info.row.original)}>
+              <IconButton
+                size="small"
+                color="primary"
+                aria-label="Edit stock"
+                onClick={() => onEdit(info.row.original)}
+              >
                 <EditIcon fontSize="small" />
               </IconButton>
             </Tooltip>
             <Tooltip title="Delete">
-              <IconButton size="small" color="error" onClick={() => onDelete(info.row.original)}>
+              <IconButton
+                size="small"
+                color="error"
+                aria-label="Delete stock"
+                onClick={() => onDelete(info.row.original)}
+              >
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Tooltip>
@@ -108,10 +146,18 @@ export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProp
     [onDelete, onEdit]
   );
 
+  const columnVisibility = useMemo(
+    () => ({
+      companyName: !isMobile,
+      purchaseDate: !isMobile,
+    }),
+    [isMobile]
+  );
+
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter },
+    state: { sorting, globalFilter, columnVisibility },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
@@ -123,8 +169,8 @@ export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProp
     <Box>
       <Box sx={{ mb: 2, maxWidth: 360 }}>
         <TextField
-          value={globalFilter ?? ''}
-          onChange={(e) => setGlobalFilter(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search stocks"
           size="small"
           fullWidth
@@ -155,7 +201,15 @@ export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProp
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanSort() && header.column.getIsSorted() === 'asc' && (
+                          <ArrowDropUpIcon fontSize="small" />
+                        )}
+                        {header.column.getCanSort() && header.column.getIsSorted() === 'desc' && (
+                          <ArrowDropDownIcon fontSize="small" />
+                        )}
+                      </Box>
                   </TableCell>
                 ))}
               </TableRow>
@@ -163,7 +217,15 @@ export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProp
           </TableHead>
           <TableBody>
             {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} hover>
+              <TableRow
+                key={row.id}
+                hover
+                onClick={() => onSelectTicker?.(row.original.ticker)}
+                sx={{
+                  cursor: onSelectTicker ? 'pointer' : 'default',
+                  bgcolor: selectedTicker && row.original.ticker === selectedTicker ? 'action.hover' : undefined,
+                }}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

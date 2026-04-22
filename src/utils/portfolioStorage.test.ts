@@ -51,7 +51,10 @@ describe('portfolioStorage', () => {
 
     savePortfolioEntries(entries);
 
-    expect(setItem).toHaveBeenCalledWith('portfolio_entries', JSON.stringify(entries));
+    expect(setItem).toHaveBeenCalledWith(
+      'portfolio_entries',
+      JSON.stringify({ version: 1, entries })
+    );
   });
 });
 

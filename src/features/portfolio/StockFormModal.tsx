@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Button,
   Dialog,
@@ -8,6 +8,7 @@ import {
   MenuItem,
   Stack,
   TextField,
+  CircularProgress,
 } from '@mui/material';
 import { mockStocks } from '../../data/mockStocks';
 import type { PortfolioEntry } from '../../types/stock';
@@ -46,6 +47,8 @@ const initialState: FormState = {
 export function StockFormModal({ open, onClose, onSubmit, editEntry }: StockFormModalProps) {
   const [form, setForm] = useState<FormState>(initialState);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const companyNameInputRef = useRef<HTMLInputElement | null>(null);
 
   const stockOptions = useMemo(
     () => mockStocks.map((stock) => ({ ticker: stock.ticker, name: stock.name })),
@@ -56,6 +59,7 @@ export function StockFormModal({ open, onClose, onSubmit, editEntry }: StockForm
     if (!open) {
       setForm(initialState);
       setErrors({});
+      setIsSubmitting(false);
       return;
     }
     if (editEntry) {
@@ -68,6 +72,9 @@ export function StockFormModal({ open, onClose, onSubmit, editEntry }: StockForm
       });
       setErrors({});
     }
+
+    // Focus first editable field for keyboard users.
+    queueMicrotask(() => companyNameInputRef.current?.focus());
   }, [open, editEntry]);
 
   const handleTickerChange = (ticker: string) => {
@@ -102,7 +109,9 @@ export function StockFormModal({ open, onClose, onSubmit, editEntry }: StockForm
   };
 
   const handleSubmit = () => {
+    if (isSubmitting) return;
     if (!validate()) return;
+    setIsSubmitting(true);
 
     onSubmit({
       id: editEntry?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -112,6 +121,7 @@ export function StockFormModal({ open, onClose, onSubmit, editEntry }: StockForm
       purchasePrice: Number(form.purchasePrice),
       purchaseDate: form.purchaseDate,
     });
+    setIsSubmitting(false);
   };
 
   return (
@@ -141,6 +151,7 @@ export function StockFormModal({ open, onClose, onSubmit, editEntry }: StockForm
             onChange={(e) => setForm((prev) => ({ ...prev, companyName: e.target.value }))}
             error={Boolean(errors.companyName)}
             helperText={errors.companyName}
+            inputRef={companyNameInputRef}
             fullWidth
           />
 
@@ -179,10 +190,11 @@ export function StockFormModal({ open, onClose, onSubmit, editEntry }: StockForm
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} color="inherit">
+        <Button onClick={onClose} color="inherit" disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} variant="contained">
+        <Button onClick={handleSubmit} variant="contained" disabled={isSubmitting}>
+          {isSubmitting ? <CircularProgress size={18} color="inherit" /> : null}
           {editEntry ? 'Save Changes' : 'Add Stock'}
         </Button>
       </DialogActions>

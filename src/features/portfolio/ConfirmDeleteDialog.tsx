@@ -6,6 +6,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
+import { useState } from 'react';
 
 interface ConfirmDeleteDialogProps {
   open: boolean;
@@ -20,6 +21,18 @@ export function ConfirmDeleteDialog({
   onClose,
   onConfirm,
 }: ConfirmDeleteDialogProps) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleConfirm = () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      onConfirm();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>Delete Stock</DialogTitle>
@@ -29,10 +42,10 @@ export function ConfirmDeleteDialog({
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} color="inherit">
+        <Button onClick={onClose} color="inherit" disabled={isDeleting}>
           Cancel
         </Button>
-        <Button onClick={onConfirm} variant="contained" color="error">
+        <Button onClick={handleConfirm} variant="contained" color="error" disabled={isDeleting}>
           Delete
         </Button>
       </DialogActions>
