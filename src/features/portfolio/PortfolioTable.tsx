@@ -67,6 +67,10 @@ export function PortfolioTable({ entries }: PortfolioTableProps) {
           return price === null ? 'N/A' : `Rs. ${price.toFixed(2)}`;
         },
       }),
+      columnHelper.accessor('purchaseDate', {
+        header: 'Date of Purchase',
+        cell: (info) => new Date(info.getValue()).toLocaleDateString(),
+      }),
     ],
     []
   );

@@ -16,4 +16,5 @@ export interface PortfolioEntry {
   companyName: string;
   quantity: number;
   purchasePrice: number;
+  purchaseDate: string;
 }
