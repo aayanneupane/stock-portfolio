@@ -16,6 +16,7 @@ interface StockFormModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (entry: PortfolioEntry) => void;
+  editEntry?: PortfolioEntry | null;
 }
 
 interface FormState {
@@ -42,7 +43,7 @@ const initialState: FormState = {
   purchaseDate: '',
 };
 
-export function StockFormModal({ open, onClose, onSubmit }: StockFormModalProps) {
+export function StockFormModal({ open, onClose, onSubmit, editEntry }: StockFormModalProps) {
   const [form, setForm] = useState<FormState>(initialState);
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -55,8 +56,19 @@ export function StockFormModal({ open, onClose, onSubmit }: StockFormModalProps)
     if (!open) {
       setForm(initialState);
       setErrors({});
+      return;
     }
-  }, [open]);
+    if (editEntry) {
+      setForm({
+        ticker: editEntry.ticker,
+        companyName: editEntry.companyName,
+        quantity: String(editEntry.quantity),
+        purchasePrice: String(editEntry.purchasePrice),
+        purchaseDate: editEntry.purchaseDate,
+      });
+      setErrors({});
+    }
+  }, [open, editEntry]);
 
   const handleTickerChange = (ticker: string) => {
     const match = stockOptions.find((stock) => stock.ticker === ticker);
@@ -93,7 +105,7 @@ export function StockFormModal({ open, onClose, onSubmit }: StockFormModalProps)
     if (!validate()) return;
 
     onSubmit({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: editEntry?.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       ticker: form.ticker.trim().toUpperCase(),
       companyName: form.companyName.trim(),
       quantity: Number(form.quantity),
@@ -104,7 +116,7 @@ export function StockFormModal({ open, onClose, onSubmit }: StockFormModalProps)
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Add Stock to Portfolio</DialogTitle>
+      <DialogTitle>{editEntry ? 'Edit Stock' : 'Add Stock to Portfolio'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
@@ -171,7 +183,7 @@ export function StockFormModal({ open, onClose, onSubmit }: StockFormModalProps)
           Cancel
         </Button>
         <Button onClick={handleSubmit} variant="contained">
-          Add Stock
+          {editEntry ? 'Save Changes' : 'Add Stock'}
         </Button>
       </DialogActions>
     </Dialog>

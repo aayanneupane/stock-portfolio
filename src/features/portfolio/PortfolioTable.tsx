@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-table';
 import {
   Box,
+  IconButton,
   Paper,
   Table,
   TableBody,
@@ -14,8 +15,11 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import type { PortfolioEntry } from '../../types/stock';
 import { getCurrentPrice } from '../../utils/stockHelpers';
 
@@ -25,11 +29,13 @@ interface PortfolioRow extends PortfolioEntry {
 
 interface PortfolioTableProps {
   entries: PortfolioEntry[];
+  onEdit: (entry: PortfolioEntry) => void;
+  onDelete: (entry: PortfolioEntry) => void;
 }
 
 const columnHelper = createColumnHelper<PortfolioRow>();
 
-export function PortfolioTable({ entries }: PortfolioTableProps) {
+export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProps) {
   const data = useMemo<PortfolioRow[]>(
     () =>
       entries.map((entry) => ({
@@ -71,8 +77,26 @@ export function PortfolioTable({ entries }: PortfolioTableProps) {
         header: 'Date of Purchase',
         cell: (info) => new Date(info.getValue()).toLocaleDateString(),
       }),
+      columnHelper.display({
+        id: 'actions',
+        header: 'Actions',
+        cell: (info) => (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Tooltip title="Edit">
+              <IconButton size="small" color="primary" onClick={() => onEdit(info.row.original)}>
+                <EditIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete">
+              <IconButton size="small" color="error" onClick={() => onDelete(info.row.original)}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        ),
+      }),
     ],
-    []
+    [onDelete, onEdit]
   );
 
   const table = useReactTable({

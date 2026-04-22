@@ -4,15 +4,41 @@ import AddIcon from '@mui/icons-material/Add';
 import { mockPortfolio } from '../data/mockPortfolio';
 import { PortfolioTable } from '../features/portfolio/PortfolioTable';
 import { StockFormModal } from '../features/portfolio/StockFormModal';
+import { ConfirmDeleteDialog } from '../features/portfolio/ConfirmDeleteDialog';
 import type { PortfolioEntry } from '../types/stock';
 
 export function PortfolioPage() {
   const [entries, setEntries] = useState<PortfolioEntry[]>(mockPortfolio);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editEntry, setEditEntry] = useState<PortfolioEntry | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PortfolioEntry | null>(null);
 
-  const handleAddStock = (entry: PortfolioEntry) => {
-    setEntries((prev) => [entry, ...prev]);
+  const handleSubmitStock = (entry: PortfolioEntry) => {
+    setEntries((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === entry.id);
+      if (existingIndex === -1) return [entry, ...prev];
+      const next = [...prev];
+      next[existingIndex] = entry;
+      return next;
+    });
     setIsModalOpen(false);
+    setEditEntry(null);
+  };
+
+  const handleEditStock = (entry: PortfolioEntry) => {
+    setEditEntry(entry);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteStock = () => {
+    if (!deleteTarget) return;
+    setEntries((prev) => prev.filter((item) => item.id !== deleteTarget.id));
+    setDeleteTarget(null);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditEntry(null);
   };
 
   return (
@@ -27,13 +53,26 @@ export function PortfolioPage() {
       </Box>
       <Card sx={{ borderRadius: 2 }}>
         <CardContent>
-          <PortfolioTable entries={entries} />
+          <PortfolioTable
+            entries={entries}
+            onEdit={handleEditStock}
+            onDelete={setDeleteTarget}
+          />
         </CardContent>
       </Card>
       <StockFormModal
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddStock}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmitStock}
+        editEntry={editEntry}
+      />
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTarget)}
+        stockLabel={
+          deleteTarget ? `${deleteTarget.ticker} - ${deleteTarget.companyName}` : 'this stock'
+        }
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteStock}
       />
     </Box>
   );
