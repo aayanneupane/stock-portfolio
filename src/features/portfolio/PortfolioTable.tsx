@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
   useReactTable,
+  type SortingState,
 } from '@tanstack/react-table';
 import {
   Box,
   IconButton,
+  InputAdornment,
   Paper,
   Table,
   TableBody,
@@ -15,11 +19,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 import type { PortfolioEntry } from '../../types/stock';
 import { getCurrentPrice } from '../../utils/stockHelpers';
 
@@ -36,6 +42,9 @@ interface PortfolioTableProps {
 const columnHelper = createColumnHelper<PortfolioRow>();
 
 export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProps) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+
   const data = useMemo<PortfolioRow[]>(
     () =>
       entries.map((entry) => ({
@@ -102,18 +111,50 @@ export function PortfolioTable({ entries, onEdit, onDelete }: PortfolioTableProp
   const table = useReactTable({
     data,
     columns,
+    state: { sorting, globalFilter },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
     <Box>
+      <Box sx={{ mb: 2, maxWidth: 360 }}>
+        <TextField
+          value={globalFilter ?? ''}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          placeholder="Search stocks"
+          size="small"
+          fullWidth
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" color="action" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+      </Box>
       <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
         <Table>
           <TableHead sx={{ bgcolor: 'grey.50' }}>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableCell key={header.id} sx={{ fontWeight: 700 }}>
+                  <TableCell
+                    key={header.id}
+                    onClick={header.column.getToggleSortingHandler()}
+                    sx={{
+                      fontWeight: 700,
+                      cursor: header.column.getCanSort() ? 'pointer' : 'default',
+                      userSelect: 'none',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </TableCell>
                 ))}

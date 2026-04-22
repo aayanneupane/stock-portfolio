@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Button, Card, CardContent, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { mockPortfolio } from '../data/mockPortfolio';
@@ -6,12 +6,17 @@ import { PortfolioTable } from '../features/portfolio/PortfolioTable';
 import { StockFormModal } from '../features/portfolio/StockFormModal';
 import { ConfirmDeleteDialog } from '../features/portfolio/ConfirmDeleteDialog';
 import type { PortfolioEntry } from '../types/stock';
+import { loadPortfolioEntries, savePortfolioEntries } from '../utils/portfolioStorage';
 
 export function PortfolioPage() {
-  const [entries, setEntries] = useState<PortfolioEntry[]>(mockPortfolio);
+  const [entries, setEntries] = useState<PortfolioEntry[]>(() => loadPortfolioEntries(mockPortfolio));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<PortfolioEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PortfolioEntry | null>(null);
+
+  useEffect(() => {
+    savePortfolioEntries(entries);
+  }, [entries]);
 
   const handleSubmitStock = (entry: PortfolioEntry) => {
     setEntries((prev) => {
