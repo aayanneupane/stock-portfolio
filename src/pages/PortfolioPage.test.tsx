@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, within, waitForElementToBeRemoved } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Provider } from 'react-redux';
 import { PortfolioPage } from './PortfolioPage';
+import { createAppStore } from '../store/store';
 
 vi.mock('../features/dashboard/StockLineChart', () => ({
   StockLineChart: () => <div data-testid="mock-line-chart" />,
@@ -14,11 +16,16 @@ vi.mock('../features/dashboard/StockColumnChart', () => ({
 describe('PortfolioPage', () => {
   it('adds, edits, and deletes a stock (and persists)', async () => {
     const user = userEvent.setup();
+    const store = createAppStore();
 
     const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {});
     vi.spyOn(Storage.prototype, 'getItem').mockReturnValueOnce(null); 
 
-    render(<PortfolioPage />);
+    render(
+      <Provider store={store}>
+        <PortfolioPage />
+      </Provider>
+    );
 
     
     await user.click(screen.getByRole('button', { name: /add stock/i }));

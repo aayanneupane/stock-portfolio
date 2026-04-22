@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, Button, Card, CardContent, Grid, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import toast from 'react-hot-toast';
@@ -11,31 +11,41 @@ import { StockFormModal } from '../features/portfolio/StockFormModal';
 import { ConfirmDeleteDialog } from '../features/portfolio/ConfirmDeleteDialog';
 import type { PortfolioEntry } from '../types/stock';
 import { loadPortfolioEntries, savePortfolioEntries } from '../utils/portfolioStorage';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+  hydratePortfolio,
+  removeEntry,
+  setSelectedTicker,
+  upsertEntry,
+} from '../store/portfolio/portfolioSlice';
 
 export function PortfolioPage() {
-  const [entries, setEntries] = useState<PortfolioEntry[]>(() => loadPortfolioEntries(mockPortfolio));
+  const dispatch = useAppDispatch();
+  const entries = useAppSelector((state) => state.portfolio.entries);
+  const selectedTicker = useAppSelector((state) => state.portfolio.selectedTicker);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<PortfolioEntry | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PortfolioEntry | null>(null);
-  const [selectedTicker, setSelectedTicker] = useState<string>('');
+  const hydrationStage = useRef<'not_started' | 'hydrating' | 'hydrated'>('not_started');
 
   useEffect(() => {
+    hydrationStage.current = 'hydrating';
+    dispatch(hydratePortfolio(loadPortfolioEntries(mockPortfolio)));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (hydrationStage.current !== 'hydrated') {
+      // Avoid overwriting localStorage with the pre-hydration default state.
+      if (hydrationStage.current === 'hydrating') hydrationStage.current = 'hydrated';
+      return;
+    }
     const ok = savePortfolioEntries(entries);
     if (!ok) toast.error('Could not save portfolio (storage full or blocked).');
-    if (!selectedTicker && entries.length) setSelectedTicker(entries[0].ticker);
-    if (selectedTicker && entries.length === 0) setSelectedTicker('');
   }, [entries]);
 
   const handleSubmitStock = (entry: PortfolioEntry) => {
-    const isEdit = entries.some((e) => e.id === entry.id);
-    setEntries((prev) => {
-      const existingIndex = prev.findIndex((item) => item.id === entry.id);
-      if (existingIndex === -1) return [entry, ...prev];
-      const next = [...prev];
-      next[existingIndex] = entry;
-      return next;
-    });
-    setSelectedTicker(entry.ticker);
+    const isEdit = entries.some((entryItem: PortfolioEntry) => entryItem.id === entry.id);
+    dispatch(upsertEntry(entry));
     toast.success(isEdit ? 'Stock updated' : 'Stock added');
     setIsModalOpen(false);
     setEditEntry(null);
@@ -48,12 +58,8 @@ export function PortfolioPage() {
 
   const handleDeleteStock = () => {
     if (!deleteTarget) return;
-    setEntries((prev) => prev.filter((item) => item.id !== deleteTarget.id));
+    dispatch(removeEntry(deleteTarget.id));
     toast.success('Stock removed');
-    if (deleteTarget.ticker === selectedTicker) {
-      const remaining = entries.filter((e) => e.id !== deleteTarget.id);
-      setSelectedTicker(remaining[0]?.ticker ?? '');
-    }
     setDeleteTarget(null);
   };
 
@@ -125,7 +131,7 @@ export function PortfolioPage() {
               onEdit={handleEditStock}
               onDelete={setDeleteTarget}
               selectedTicker={selectedTicker}
-              onSelectTicker={setSelectedTicker}
+              onSelectTicker={(ticker) => dispatch(setSelectedTicker(ticker))}
             />
           )}
         </CardContent>

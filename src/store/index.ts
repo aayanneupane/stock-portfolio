@@ -1,5 +1,4 @@
 export * from './store';
 
 export * from './hooks';
-
-export * from './auth/index';
+export * from './portfolio/portfolioSlice';

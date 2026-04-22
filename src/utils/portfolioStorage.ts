@@ -36,7 +36,7 @@ export function loadPortfolioEntries(fallback: PortfolioEntry[]): PortfolioEntry
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as unknown;
-    // Back-compat: older versions stored an array directly
+   
     if (Array.isArray(parsed)) {
       const normalized = normalizeEntries(parsed);
       return normalized ?? fallback;

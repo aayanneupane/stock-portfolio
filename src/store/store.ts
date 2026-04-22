@@ -1,19 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './auth/authSlice';
-import { baseApi } from './baseApi.config';
+import portfolioReducer from './portfolio/portfolioSlice';
 
-export const store = configureStore({
-  reducer: {
-    auth: authReducer,
+export const createAppStore = () =>
+  configureStore({
+    reducer: {
+      portfolio: portfolioReducer,
+    },
+    devTools: import.meta.env.MODE !== 'production',
+  });
 
-    [baseApi.reducerPath]: baseApi.reducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware()
-      .concat(baseApi.middleware),
-
-  devTools: import.meta.env.MODE !== 'production',
-});
+export const store = createAppStore();
 
 export type RootState = ReturnType<typeof store.getState>;
 
